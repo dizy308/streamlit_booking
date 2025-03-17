@@ -16,7 +16,7 @@ from function_file import preprocessing_data_calendar, generate_hour_block, next
 st.set_page_config(page_icon=":calendar:")
 
 conn = st.connection("gsheets", type=GSheetsConnection, ttl=30)
-data_template = conn.read(ttl=3)
+data_template = conn.read(ttl=10)
 # output_booking = "StorageFolder/bookings.csv"
 
 if data_template.shape[1] == 9:
@@ -139,19 +139,7 @@ elif page == 'Calendar':
     df_raw, df_calendar, df_calendar_count = preprocessing_data_calendar(st.session_state.bookings, data_type = calendar_type, 
                                                                          start_date_calendar=start_date_input,end_date_calendar=end_date_input)
 
-    
     with tab2_1:
-        if 'show_table_1' not in st.session_state:
-            st.session_state.show_table_1 = True
-        if st.button("Switch Table"):
-            st.session_state.show_table_1 = not st.session_state.show_table_1
-            
-        if st.session_state.show_table_1:
-            st.dataframe(df_calendar_count)
-        else:
-            st.dataframe(df_calendar)
-
-    with tab2_2:
         col1, col2, col3 = st.columns(3)
         ###----------------Set Up Filter----------------###
         with col1:
@@ -183,6 +171,19 @@ elif page == 'Calendar':
         data_calendar_check_styled = data_calendar_check.style.map(color_value).format('{:.0f}', subset=data_calendar_check.select_dtypes(include=['number']).columns)
         
         st.dataframe(data_calendar_check_styled)
+
+    with tab2_2:
+        if 'show_table_1' not in st.session_state:
+            st.session_state.show_table_1 = True
+        if st.button("Switch Table"):
+            st.session_state.show_table_1 = not st.session_state.show_table_1
+            
+        if st.session_state.show_table_1:
+            st.dataframe(df_calendar_count)
+        else:
+            st.dataframe(df_calendar)
+
+
     with tab2_3:
         st.title('InputData')
         st.dataframe(st.session_state.bookings)
