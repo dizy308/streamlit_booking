@@ -16,11 +16,11 @@ from function_file import preprocessing_data_calendar, generate_hour_block, next
 st.set_page_config(page_icon=":calendar:")
 
 conn = st.connection("gsheets", type=GSheetsConnection)
-data_template = conn.read(ttl=10)
+data_template = conn.read()
 # output_booking = "StorageFolder/bookings.csv"
 
 if data_template.shape[1] == 9:
-    st.session_state.bookings = conn.read(ttl=10)
+    st.session_state.bookings = conn.read(ttl= 5)
 else:
     st.session_state.bookings = pd.DataFrame(columns=['OrderTime', 'CustomerID', 'CustomerType', 'StartTime', 'EndTime', 'StartDate', 'EndDate', 'DayOfWeek', 'CourtNumber'])
 
@@ -60,7 +60,7 @@ if page == 'Booking':
 
     if submitted:
         with st.spinner("Processing your booking..."):
-            time.sleep(1)  
+            time.sleep(3)
         invalid_days = [day for day in day_of_week if not any((start_date + timedelta(days=i)).strftime("%A") == day for i in range((end_date - start_date).days + 1))]
         if invalid_days:
             st.error(f"The selected {invalid_days} do not exist within the date range {start_date} to {end_date}.", icon="🚨")
@@ -117,8 +117,6 @@ if page == 'Booking':
                 success_message.empty()
             
 elif page == 'Calendar':
-    with st.spinner("Updating Calendar..."):
-        time.sleep(5)  
     st.markdown(
         """
         <style>
