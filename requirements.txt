@@ -2,5 +2,5 @@ streamlit
 pandas
 numpy
 gspread
-streamlit-gsheets
+st-gsheets-connection
 python-dateutil
