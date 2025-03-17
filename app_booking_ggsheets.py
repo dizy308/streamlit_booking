@@ -15,7 +15,7 @@ from function_file import preprocessing_data_calendar, generate_hour_block, next
 
 st.set_page_config(page_icon=":calendar:")
 
-conn = st.connection("gsheets", type=GSheetsConnection, ttl=30)
+conn = st.connection("gsheets", type=GSheetsConnection)
 data_template = conn.read(ttl=10)
 # output_booking = "StorageFolder/bookings.csv"
 
@@ -136,7 +136,8 @@ elif page == 'Calendar':
     start_date_input = (current_datetime .replace(day = 1)).strftime('%Y-%m-%d')
     end_date_input = (current_datetime.replace(day = 1)  + relativedelta(day = 31)).strftime('%Y-%m-%d')
 
-    df_raw, df_calendar, df_calendar_count = preprocessing_data_calendar(st.session_state.bookings, data_type = calendar_type, 
+    data_booking = st.session_state.bookings
+    df_raw, df_calendar, df_calendar_count = preprocessing_data_calendar(data_booking, data_type = calendar_type, 
                                                                          start_date_calendar=start_date_input,end_date_calendar=end_date_input)
 
     with tab2_1:
