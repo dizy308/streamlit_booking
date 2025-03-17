@@ -15,7 +15,7 @@ from function_file import preprocessing_data_calendar, generate_hour_block, next
 
 st.set_page_config(page_icon=":calendar:")
 
-conn = st.connection("gsheets", type=GSheetsConnection, ttl=5)
+conn = st.connection("gsheets", type=GSheetsConnection, ttl=30)
 data_template = conn.read(ttl=3)
 # output_booking = "StorageFolder/bookings.csv"
 
