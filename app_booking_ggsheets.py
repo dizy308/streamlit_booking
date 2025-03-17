@@ -136,7 +136,7 @@ elif page == 'Calendar':
     start_date_input = (current_datetime .replace(day = 1)).strftime('%Y-%m-%d')
     end_date_input = (current_datetime.replace(day = 1)  + relativedelta(day = 31)).strftime('%Y-%m-%d')
 
-    data_booking = st.session_state.bookings
+    data_booking = conn.read()
     df_raw, df_calendar, df_calendar_count = preprocessing_data_calendar(data_booking, data_type = calendar_type, 
                                                                          start_date_calendar=start_date_input,end_date_calendar=end_date_input)
     st.text('hello')
