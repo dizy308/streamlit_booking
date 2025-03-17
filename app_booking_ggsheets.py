@@ -20,7 +20,7 @@ data_template = conn.read(ttl=10)
 # output_booking = "StorageFolder/bookings.csv"
 
 if data_template.shape[1] == 9:
-    st.session_state.bookings = conn.read(ttl=3)
+    st.session_state.bookings = conn.read(ttl=10)
 else:
     st.session_state.bookings = pd.DataFrame(columns=['OrderTime', 'CustomerID', 'CustomerType', 'StartTime', 'EndTime', 'StartDate', 'EndDate', 'DayOfWeek', 'CourtNumber'])
 
@@ -187,6 +187,6 @@ elif page == 'Calendar':
 
     with tab2_3:
         st.title('InputData')
-        st.dataframe(st.session_state.bookings)
+        st.dataframe(data_booking)
         st.title('RawData')
         st.dataframe(df_raw)
