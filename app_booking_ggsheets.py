@@ -117,6 +117,8 @@ if page == 'Booking':
                 success_message.empty()
             
 elif page == 'Calendar':
+    with st.spinner("Updating Calendar..."):
+        time.sleep(5)  
     st.markdown(
         """
         <style>
