@@ -1,0 +1,6 @@
+streamlit
+pandas
+numpy
+gspread
+streamlit-gsheets
+python-dateutil
