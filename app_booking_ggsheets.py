@@ -139,7 +139,7 @@ elif page == 'Calendar':
     data_booking = st.session_state.bookings
     df_raw, df_calendar, df_calendar_count = preprocessing_data_calendar(data_booking, data_type = calendar_type, 
                                                                          start_date_calendar=start_date_input,end_date_calendar=end_date_input)
-
+    st.text('hello')
     with tab2_1:
         col1, col2, col3 = st.columns(3)
         ###----------------Set Up Filter----------------###
