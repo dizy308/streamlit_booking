@@ -21,7 +21,7 @@ data_template = conn.read()
 
 lst_cols_template = ['OrderTime', 'CustomerID', 'CustomerType', 'StartTime', 'EndTime', 'StartDate', 'EndDate', 'DayOfWeek', 'CourtNumber', 'Note']
 
-if data_template.columns == lst_cols_template:
+if data_template.shape[1] == len(lst_cols_template):
     st.session_state.bookings = conn.read()
 else:
     st.session_state.bookings = pd.DataFrame(columns=lst_cols_template)
