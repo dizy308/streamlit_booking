@@ -48,7 +48,7 @@ if page == 'Booking':
             customer_id = st.text_input("Customer ID")
             customer_type = st.selectbox("Customer Type", ["Cố Định", "Vãng Lai"], index=None)
             court_num = st.selectbox("Court Number", ["Court 1", "Court 2", "Court 3"], index = None)
-            password_box = st.text_input("Password")
+            password_box = st.text_input("Password", type="password")  
 
         with col2:
             day_of_week = st.multiselect("Day of Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="test_group_1")
