@@ -66,7 +66,7 @@ if page == 'Booking':
         invalid_days = [day for day in day_of_week if not any((start_date + timedelta(days=i)).strftime("%A") == day for i in range((end_date - start_date).days + 1))]
         if invalid_days:
             st.error(f"The selected {invalid_days} do not exist within the date range {start_date} to {end_date}.", icon="🚨")
-        elif password_box != "123":
+        elif password_box != "bookinghaianh":
             st.error("Please enter the correct password.")
         elif not all([customer_id, customer_type, start_time, end_time, start_date, end_date, day_of_week, court_num]):
             st.error("Please fill out all fields.")
