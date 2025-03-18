@@ -49,7 +49,7 @@ if page == 'Booking':
             customer_id = st.text_input("Customer ID")
             customer_type = st.selectbox("Customer Type", ["Cố Định", "Vãng Lai"], index=None)
             court_num = st.selectbox("Court Number", ["Court 1", "Court 2", "Court 3"], index = None)
-            password_box = st.text_input("Password", type="password")  
+            note_box = st.text_input("Note")  
 
         with col2:
             day_of_week = st.multiselect("Day of Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="test_group_1")
@@ -67,8 +67,6 @@ if page == 'Booking':
         invalid_days = [day for day in day_of_week if not any((start_date + timedelta(days=i)).strftime("%A") == day for i in range((end_date - start_date).days + 1))]
         if invalid_days:
             st.error(f"The selected {invalid_days} do not exist within the date range {start_date} to {end_date}.", icon="🚨")
-        elif password_box != "bookinghaianh":
-            st.error("Please enter the correct password.")
         elif not all([customer_id, customer_type, start_time, end_time, start_date, end_date, day_of_week, court_num]):
             st.error("Please fill out all fields.")
         elif end_date < start_date or end_time <= start_time:
@@ -112,7 +110,8 @@ if page == 'Booking':
                     'StartDate': [start_date],
                     'EndDate': [end_date],
                     'DayOfWeek': [day_of_week_str],
-                    'CourtNumber' : [court_num]
+                    'CourtNumber' : [court_num],
+                    'Note' : [note_box],
                 })
                 st.session_state.bookings = pd.concat([st.session_state.bookings, new_booking], ignore_index=True)
                 conn.update(worksheet="InputData", data=st.session_state.bookings)
