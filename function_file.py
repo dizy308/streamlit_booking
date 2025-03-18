@@ -82,19 +82,23 @@ def preprocessing_data_calendar(data_frame, start_date_calendar, end_date_calend
         data['DayOfWeek_Split'].replace(mapping_dow, inplace = True)
         data['DeliverDate'] = data.apply(lambda row: next_weekday_in_interval(row['StartDate'], row['EndDate'], row['DayOfWeek_Split']), axis = 1)
         data = data.explode('DeliverDate')
+        data['DayName'] = pd.to_datetime(data['DeliverDate']).dt.day_name()
         data['HourBlock'] = data.apply(lambda row: generate_hour_block(row['StartTime'], row['EndTime']), axis=1)
         data = data.explode('HourBlock').sort_values(by = ['OrderID', 'DeliverDate', 'HourBlock']).drop(['DayOfWeek_Split'], axis = 1).reset_index(drop=True)
 
         if data_type == 'All Data':
             data_calendar_hour_block = pd.DataFrame({'DeliverDate':pd.date_range(start_date_calendar, end_date_calendar)}, dtype=str)\
                                     .merge(pd.DataFrame({'HourBlock': generate_hour_block(6,23)}, dtype = str), how = 'cross')
-            data = data_calendar_hour_block.merge(data, how = 'left', left_on = ['DeliverDate', 'HourBlock'], right_on = ['DeliverDate', 'HourBlock'])
+            data_calendar_hour_block['DayName'] = pd.to_datetime(data_calendar_hour_block['DeliverDate']).dt.day_name()
+            data = data_calendar_hour_block.merge(data, how = 'left', left_on = ['DeliverDate', 'HourBlock', 'DayName'], right_on = ['DeliverDate', 'HourBlock', 'DayName'])
         
         column_deliver_date, column_hour_block = ['DeliverDate', 'HourBlock']
         ###----------------------------------------------------------------###
-        data_pivot = pd.pivot_table(data, index = [column_deliver_date], columns = column_hour_block, values = 'CustomerID', \
+        data_pivot_customer = pd.pivot_table(data, index = [column_deliver_date], columns = column_hour_block, values = 'CustomerID', \
                                     aggfunc = lambda x: ' || '.join( sorted(x.fillna(''))) ).reset_index()
-        
+        data_pivot_court = pd.pivot_table(data, index = [column_deliver_date], columns = column_hour_block, values = 'CourtNumber', \
+                                    aggfunc = lambda x: ' || '.join( sorted(x.fillna(''))) ).reset_index()
+       
         data_pivot_count = pd.pivot_table(data, index = column_deliver_date, columns = column_hour_block, values = 'CustomerID', aggfunc = 'count')
         data_pivot_count.fillna(0,inplace = True)
         data_pivot_count_styled = data_pivot_count.style.map(color_value).format('{:.0f}')
@@ -102,9 +106,18 @@ def preprocessing_data_calendar(data_frame, start_date_calendar, end_date_calend
     else:
         raise Exception("Cannot read the Dataframe")
     
-    return data, data_pivot, data_pivot_count_styled
+    return data, data_pivot_customer, data_pivot_court
 
 
-
+def switch_chart_streamlit(chart1, chart2, button_name):
+    if 'show_table_1' not in st.session_state:
+        st.session_state.show_table_1 = True
+    if st.button(button_name):
+        st.session_state.show_table_1 = not st.session_state.show_table_1
+        
+    if st.session_state.show_table_1:
+        st.dataframe(chart1)
+    else:
+        st.dataframe(chart2)
 
 

@@ -3,6 +3,7 @@ from streamlit_gsheets import GSheetsConnection
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import pandas as pd
+import numpy as np
 import os
 import time
 import calendar
@@ -11,15 +12,16 @@ import gspread
 
 import warnings
 warnings.filterwarnings('ignore')
+from function_file import *
 
-from function_file import preprocessing_data_calendar, generate_hour_block, next_weekday_in_interval_lst, color_value, mapping_dow 
-
-st.set_page_config(page_icon=":calendar:", page_title="Booking")
+st.set_page_config(page_icon=":car:", page_title="Booking App", layout="wide")
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 data_template = conn.read()
 
 lst_cols_template = ['OrderTime', 'CustomerID', 'CustomerType', 'StartTime', 'EndTime', 'StartDate', 'EndDate', 'DayOfWeek', 'CourtNumber', 'Note']
+lst_courts_template = ['C_1', 'C_2', 'C_3']
+lst_dow_template = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 if data_template.shape[1] == len(lst_cols_template):
     st.session_state.bookings = conn.read()
@@ -28,7 +30,7 @@ else:
 
 
 current_datetime = datetime.now().date()
-page = st.sidebar.selectbox("Choose a page", ["Booking", "Calendar"])
+page = st.sidebar.selectbox("Choose a page", ["Calendar", "Booking"])
 
 if page == 'Booking':
     st.markdown(
@@ -48,11 +50,11 @@ if page == 'Booking':
             order_date = st.date_input("Order Date", value = current_datetime, format = "YYYY-MM-DD")
             customer_id = st.text_input("Customer ID")
             customer_type = st.selectbox("Customer Type", ["Cố Định", "Vãng Lai"], index=None)
-            court_num = st.selectbox("Court Number", ["Court 1", "Court 2", "Court 3"], index = None)
-            note_box = st.text_input("Note")  
+            court_num = st.selectbox("Court Number", lst_courts_template, index = None)
+            note_box = st.text_input("Note", value = " ")  
 
         with col2:
-            day_of_week = st.multiselect("Day of Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="test_group_1")
+            day_of_week = st.multiselect("Day of Week", lst_dow_template, key="test_group_1")
             start_date = st.date_input("Start Date")
             end_date = st.date_input("End Date")
             start_time = st.selectbox("Start Time (Hour)", options=range(6, 23), index=0) 
@@ -78,24 +80,27 @@ if page == 'Booking':
         else:
             day_of_week_str = "_".join(day_of_week)
             # Check if the time slot is occupied for any of the selected days
-            is_occupied = False
-            for day in day_of_week:
-                occupied = st.session_state.bookings[
-                    (st.session_state.bookings['DayOfWeek'].str.contains(day)) & 
-                    (
-                        ((st.session_state.bookings['StartDate'] <= datetime.strftime(start_date, "%Y-%m-%d")) & (st.session_state.bookings['EndDate'] >= datetime.strftime(start_date, "%Y-%m-%d"))) |
-                        ((st.session_state.bookings['StartDate'] <= datetime.strftime(end_date, "%Y-%m-%d")) & (st.session_state.bookings['EndDate'] >= datetime.strftime(end_date, "%Y-%m-%d"))) |
-                        ((st.session_state.bookings['StartDate'] >= datetime.strftime(start_date, "%Y-%m-%d")) & (st.session_state.bookings['EndDate'] <= datetime.strftime(end_date, "%Y-%m-%d")))
-                    ) & 
-                    (
-                        (st.session_state.bookings['StartTime'] < end_time) & 
-                        (st.session_state.bookings['EndTime'] > start_time) &
-                        (st.session_state.bookings['CourtNumber'] == court_num) 
-                    )
-                ].any().any()
-                if occupied:
-                    is_occupied = True
-                    break
+            if st.session_state.bookings.empty:
+                is_occupied = False
+            else:
+                is_occupied = False
+                for day in day_of_week:
+                    occupied = st.session_state.bookings[
+                        (st.session_state.bookings['DayOfWeek'].str.contains(day)) & 
+                        (
+                            ((st.session_state.bookings['StartDate'] <= datetime.strftime(start_date, "%Y-%m-%d")) & (st.session_state.bookings['EndDate'] >= datetime.strftime(start_date, "%Y-%m-%d"))) |
+                            ((st.session_state.bookings['StartDate'] <= datetime.strftime(end_date, "%Y-%m-%d")) & (st.session_state.bookings['EndDate'] >= datetime.strftime(end_date, "%Y-%m-%d"))) |
+                            ((st.session_state.bookings['StartDate'] >= datetime.strftime(start_date, "%Y-%m-%d")) & (st.session_state.bookings['EndDate'] <= datetime.strftime(end_date, "%Y-%m-%d")))
+                        ) & 
+                        (
+                            (st.session_state.bookings['StartTime'] < end_time) & 
+                            (st.session_state.bookings['EndTime'] > start_time) &
+                            (st.session_state.bookings['CourtNumber'] == court_num) 
+                        )
+                    ].any().any()
+                    if occupied:
+                        is_occupied = True
+                        break
 
             if is_occupied:
                 st.error("This time slot is already occupied for one or more selected days. Please choose another time.")
@@ -132,7 +137,7 @@ elif page == 'Calendar':
         unsafe_allow_html=True
     )
 
-    st.markdown("<h1 style='text-align: center; color: green;'>DỮ LIỆU ĐẶT SÂN</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: green;'>DỮ LIỆU ĐẶT SÂN 📅</h1>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         calendar_type = st.selectbox("Filter Data Type", ["Filter Data", "All Data"], index = 1)
@@ -144,7 +149,7 @@ elif page == 'Calendar':
     end_date_input = (current_datetime.replace(day = 1)  + relativedelta(day = 31)).strftime('%Y-%m-%d')
 
 
-    df_raw, df_calendar, df_calendar_count = preprocessing_data_calendar(data_booking, data_type = calendar_type, 
+    df_raw, df_pivot_customer, df_pivot_court = preprocessing_data_calendar(data_booking, data_type = calendar_type, 
                                                                          start_date_calendar=start_date_input,end_date_calendar=end_date_input)
     with tab2_1:
         col1, col2, col3 = st.columns(3)
@@ -155,7 +160,7 @@ elif page == 'Calendar':
         with col2:
             lst_hour_block = st.multiselect("Select Hour Block", generate_hour_block(6,22))
         with col3:
-            dow_filter = st.multiselect("Day of Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+            dow_filter = st.multiselect("Day of Week", lst_dow_template)
 
         if isinstance(lst_date_range, (list, tuple)) and len(lst_date_range) == 2:
             start_date_filter, end_date_filter = lst_date_range
@@ -163,7 +168,7 @@ elif page == 'Calendar':
         else:
             st.stop()
 
-        st.markdown("<br>"*2, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
         ###---------------------------------------------###
         if dow_filter != []:
             lst_date_filter = next_weekday_in_interval_lst(start_date_filter, end_date_filter,  [mapping_dow[t] for t in dow_filter if t != "All"])
@@ -172,24 +177,18 @@ elif page == 'Calendar':
         if lst_hour_block != []:
             cond_filter = (df_raw.DeliverDate.isin(lst_date_filter)) & (df_raw.HourBlock.isin(lst_hour_block))
 
-        data_calendar_check = pd.pivot_table(df_raw.loc[cond_filter], index = 'DeliverDate', columns = 'HourBlock', \
-                                        values = 'CourtNumber', aggfunc = 'count').reset_index()
-        data_calendar_check.fillna(0, inplace = True)
-        data_calendar_check_styled = data_calendar_check.style.map(color_value).format('{:.0f}', subset=data_calendar_check.select_dtypes(include=['number']).columns)
+        data_calendar_check = pd.pivot_table(df_raw.loc[cond_filter], index = ['DeliverDate', 'DayName'], columns = 'HourBlock', \
+                                        values = 'CourtNumber', aggfunc = 'count').reset_index().fillna(0)
+        data_calendar_check_styled = data_calendar_check.style.map(color_value) \
+                                                            .format('{:.0f}', subset=data_calendar_check.select_dtypes(include=['number']).columns)
         
-        st.dataframe(data_calendar_check_styled)
+        data_calendar_note = pd.pivot_table(df_raw.loc[cond_filter], index = ['DeliverDate', 'DayName'], columns = 'HourBlock', \
+                                        values = 'Note', aggfunc = lambda x: ' || '.join( sorted(x.fillna(''))) ).reset_index()
 
+        switch_chart_streamlit(data_calendar_check_styled, data_calendar_note, "Change View")
+        
     with tab2_2:
-        if 'show_table_1' not in st.session_state:
-            st.session_state.show_table_1 = True
-        if st.button("Switch Table"):
-            st.session_state.show_table_1 = not st.session_state.show_table_1
-            
-        if st.session_state.show_table_1:
-            st.dataframe(df_calendar_count)
-        else:
-            st.dataframe(df_calendar)
-
+        switch_chart_streamlit(df_pivot_court, df_pivot_customer, "Switch Data")
 
     with tab2_3:
         st.title('InputData')
