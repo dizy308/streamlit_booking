@@ -18,12 +18,13 @@ st.set_page_config(page_icon=":calendar:", page_title="Booking")
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 data_template = conn.read()
-# output_booking = "StorageFolder/bookings.csv"
 
-if data_template.shape[1] == 9:
+lst_cols_template = ['OrderTime', 'CustomerID', 'CustomerType', 'StartTime', 'EndTime', 'StartDate', 'EndDate', 'DayOfWeek', 'CourtNumber', 'Note']
+
+if data_template.columns == lst_cols_template:
     st.session_state.bookings = conn.read()
 else:
-    st.session_state.bookings = pd.DataFrame(columns=['OrderTime', 'CustomerID', 'CustomerType', 'StartTime', 'EndTime', 'StartDate', 'EndDate', 'DayOfWeek', 'CourtNumber'])
+    st.session_state.bookings = pd.DataFrame(columns=lst_cols_template)
 
 
 current_datetime = datetime.now().date()
