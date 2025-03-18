@@ -3,10 +3,11 @@ import hashlib
 import pandas as pd
 import numpy as np
 import gspread
+import streamlit as st
 
 mapping_dow = {'Monday': 0,'Tuesday': 1,'Wednesday': 2,'Thursday': 3,'Friday': 4,'Saturday': 5,'Sunday': 6}
 
-def read_gg_sheets(cred_location, wb_url, ws_name):
+def read_gg_sheets(wb_url, ws_name, cred_location):
     gc = gspread.service_account(filename=cred_location)
     wb = gc.open_by_url(wb_url)
     ws = wb.worksheet(ws_name)

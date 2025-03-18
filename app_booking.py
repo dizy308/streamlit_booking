@@ -1,5 +1,4 @@
 import streamlit as st
-from function_file import read_gg_sheets
 from streamlit_gsheets import GSheetsConnection
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -7,6 +6,8 @@ import pandas as pd
 import os
 import time
 import calendar
+
+import gspread
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -20,7 +21,7 @@ data_template = conn.read()
 # output_booking = "StorageFolder/bookings.csv"
 
 if data_template.shape[1] == 9:
-    st.session_state.bookings = conn.read(ttl= 5)
+    st.session_state.bookings = conn.read()
 else:
     st.session_state.bookings = pd.DataFrame(columns=['OrderTime', 'CustomerID', 'CustomerType', 'StartTime', 'EndTime', 'StartDate', 'EndDate', 'DayOfWeek', 'CourtNumber'])
 
@@ -56,11 +57,12 @@ if page == 'Booking':
             start_time = st.selectbox("Start Time (Hour)", options=range(6, 23), index=0) 
             end_time = st.selectbox("End Time (Hour)", options=range(7, 24), index=0) 
 
-        submitted = st.form_submit_button("Book Court")
+        submitted = st.form_submit_button("Update Data")
 
     if submitted:
         with st.spinner("Processing your booking..."):
-            time.sleep(3)
+            time.sleep(1)
+            st.session_state.bookings = conn.read(ttl=5)
         invalid_days = [day for day in day_of_week if not any((start_date + timedelta(days=i)).strftime("%A") == day for i in range((end_date - start_date).days + 1))]
         if invalid_days:
             st.error(f"The selected {invalid_days} do not exist within the date range {start_date} to {end_date}.", icon="🚨")
@@ -112,9 +114,12 @@ if page == 'Booking':
                 })
                 st.session_state.bookings = pd.concat([st.session_state.bookings, new_booking], ignore_index=True)
                 conn.update(worksheet="InputData", data=st.session_state.bookings)
+                
                 success_message = st.success("Court booked successfully!")
-                time.sleep(2)
+                time.sleep(3)
                 success_message.empty()
+    else:
+        st.session_state.bookings = conn.read()
             
 elif page == 'Calendar':
     st.markdown(
@@ -127,19 +132,19 @@ elif page == 'Calendar':
     )
 
     st.markdown("<h1 style='text-align: center; color: green;'>DỮ LIỆU ĐẶT SÂN</h1>", unsafe_allow_html=True)
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
-        calendar_type = st.selectbox("Hello", ["Filter Data", "All Data"], index = 1)
-
+        calendar_type = st.selectbox("Filter Data Type", ["Filter Data", "All Data"], index = 1)
+    
+    data_booking = st.session_state.bookings
     tab2_1, tab2_2, tab2_3 = st.tabs(["Calendar", "Kiểm tra Lịch", "Tải dữ liệu"])
 
     start_date_input = (current_datetime .replace(day = 1)).strftime('%Y-%m-%d')
     end_date_input = (current_datetime.replace(day = 1)  + relativedelta(day = 31)).strftime('%Y-%m-%d')
 
-    data_booking = conn.read()
+
     df_raw, df_calendar, df_calendar_count = preprocessing_data_calendar(data_booking, data_type = calendar_type, 
                                                                          start_date_calendar=start_date_input,end_date_calendar=end_date_input)
-    st.text('hello')
     with tab2_1:
         col1, col2, col3 = st.columns(3)
         ###----------------Set Up Filter----------------###
