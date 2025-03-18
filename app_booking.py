@@ -48,7 +48,7 @@ if page == 'Booking':
             customer_id = st.text_input("Customer ID")
             customer_type = st.selectbox("Customer Type", ["Cố Định", "Vãng Lai"], index=None)
             court_num = st.selectbox("Court Number", ["Court 1", "Court 2", "Court 3"], index = None)
-            tba_box = st.text("To Be Added")
+            password_box = st.text_input("Password")
 
         with col2:
             day_of_week = st.multiselect("Day of Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], key="test_group_1")
@@ -66,7 +66,8 @@ if page == 'Booking':
         invalid_days = [day for day in day_of_week if not any((start_date + timedelta(days=i)).strftime("%A") == day for i in range((end_date - start_date).days + 1))]
         if invalid_days:
             st.error(f"The selected {invalid_days} do not exist within the date range {start_date} to {end_date}.", icon="🚨")
-
+        elif password_box != "123":
+            st.error("Please enter the password.")
         elif not all([customer_id, customer_type, start_time, end_time, start_date, end_date, day_of_week, court_num]):
             st.error("Please fill out all fields.")
         elif end_date < start_date or end_time <= start_time:
