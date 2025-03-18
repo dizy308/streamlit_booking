@@ -14,7 +14,7 @@ warnings.filterwarnings('ignore')
 
 from function_file import preprocessing_data_calendar, generate_hour_block, next_weekday_in_interval_lst, color_value, mapping_dow 
 
-st.set_page_config(page_icon=":calendar:")
+st.set_page_config(page_icon=":calendar:", page_title="Booking")
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 data_template = conn.read()
@@ -67,7 +67,7 @@ if page == 'Booking':
         if invalid_days:
             st.error(f"The selected {invalid_days} do not exist within the date range {start_date} to {end_date}.", icon="🚨")
         elif password_box != "123":
-            st.error("Please enter the password.")
+            st.error("Please enter the correct password.")
         elif not all([customer_id, customer_type, start_time, end_time, start_date, end_date, day_of_week, court_num]):
             st.error("Please fill out all fields.")
         elif end_date < start_date or end_time <= start_time:
